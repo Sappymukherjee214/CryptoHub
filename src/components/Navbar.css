@@ -179,3 +179,20 @@
         display: none;
     }
 }
+.login-btn {
+    padding: 10px 28px;
+    border-radius: 22px;
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(90deg, #7927ff 0%, #2193b0 100%);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #7927ff33;
+    transition: background 0.18s, transform 0.18s;
+}
+
+.login-btn:hover {
+    background: linear-gradient(90deg, #2193b0 0%, #7927ff 100%);
+    transform: translateY(-2px) scale(1.04);
+}

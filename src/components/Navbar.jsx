@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   const { setCurrency } = useContext(CoinContext);
-  
+
   const [isDark, setIsDark] = useState(() => {
     const savedTheme = localStorage.getItem("cryptohub-theme");
     return savedTheme ? savedTheme === "dark" : true;
@@ -83,7 +83,12 @@ function Navbar() {
           <option value="eur">EUR</option>
           <option value="inr">INR</option>
         </select>
-        <button className="signup-btn">Sign up</button>
+        <Link to="/login">
+          <button className="login-btn">Login</button>
+        </Link>
+                <Link to="/signup">
+          <button className="signup-btn">Sign up</button>
+        </Link>
       </div>
     </div>
   );
