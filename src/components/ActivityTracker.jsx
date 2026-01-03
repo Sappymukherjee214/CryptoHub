@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useActivity } from "../context/ActivityContext";
+import { useLeaderboard } from "../context/LeaderboardContext";
 
 const ActivityTracker = () => {
     const location = useLocation();
     const { addActivity } = useActivity();
+    const { awardPoints } = useLeaderboard();
     const trackedPathsRef = useRef(new Set());
 
     const trackActivity = useCallback((path) => {
@@ -15,6 +17,7 @@ const ActivityTracker = () => {
         }
 
         let activity = null;
+        let activityType = null;
 
         if (path === "/") {
             activity = {
@@ -23,6 +26,7 @@ const ActivityTracker = () => {
                 description: "Explored cryptocurrency market overview",
                 type: "info",
             };
+            activityType = "dashboard_visit";
         } else if (path === "/pricing") {
             activity = {
                 icon: "💎",
@@ -30,6 +34,7 @@ const ActivityTracker = () => {
                 description: "Viewed pricing plans",
                 type: "info",
             };
+            activityType = "dashboard_visit";
         } else if (path === "/blog") {
             activity = {
                 icon: "📰",
@@ -37,6 +42,7 @@ const ActivityTracker = () => {
                 description: "Browsed blog articles",
                 type: "info",
             };
+            activityType = "dashboard_visit";
         } else if (path === "/features") {
             activity = {
                 icon: "✨",
@@ -44,6 +50,7 @@ const ActivityTracker = () => {
                 description: "Viewed platform features",
                 type: "info",
             };
+            activityType = "dashboard_visit";
         } else if (path.startsWith("/coin/")) {
             const coinId = path.split("/")[2];
             activity = {
@@ -52,6 +59,7 @@ const ActivityTracker = () => {
                 description: `Checked ${coinId.toUpperCase()} details`,
                 type: "info",
             };
+            activityType = "coin_view";
         } else if (path.startsWith("/blog/")) {
             activity = {
                 icon: "📄",
@@ -59,13 +67,20 @@ const ActivityTracker = () => {
                 description: "Read a blog post",
                 type: "info",
             };
+            activityType = "dashboard_visit";
+        } else if (path === "/dashboard") {
+            activityType = "dashboard_visit";
         }
 
-        if (activity && !["/dashboard", "/login", "/signup"].includes(path)) {
+        if (activity && !["/login", "/signup"].includes(path)) {
             trackedPathsRef.current.add(pathKey);
             addActivity(activity);
         }
-    }, [addActivity]);
+
+        if (activityType) {
+            awardPoints(activityType);
+        }
+    }, [addActivity, awardPoints]);
 
     useEffect(() => {
         trackActivity(location.pathname);

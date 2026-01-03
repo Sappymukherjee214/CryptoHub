@@ -11,6 +11,7 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import BlogDetail from "./components/BlogDetail";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Leaderboard from "./components/Leaderboard";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -33,6 +34,14 @@ const App = () => {
             <Route path="/features" element={<Features />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
+            <Route
+              path="/leaderboard"
+              element={
+                <PrivateRoute>
+                  <Leaderboard />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
