@@ -16,6 +16,7 @@ import ChangePassword from "./components/ChangePassword";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import Contributors from "./components/Contributors";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { CoinContext } from "./context/CoinContext";
@@ -51,6 +52,8 @@ const App = () => {
             <Route path="/features" element={<Features />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/contributors" element={<Contributors />} />
+
             <Route
               path="/leaderboard"
               element={
