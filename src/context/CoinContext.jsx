@@ -1,26 +1,21 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useEffect, useState, useCallback, useMemo } from "react";
+import { createContext, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export const CoinContext = createContext();
 
 export const CoinContextProvider = (props) => {
-
-const [selectedFilters, setSelectedFilters] = useState(["all"]);
-  const [allCoin, setAllCoin] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState(["all"]);
   const [currency, setCurrency] = useState({
     name: "usd",
     Symbol: "$",
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  /* 
-    Adding error handling and loading states to API calls ensures a robust
-    data layer. We use useCallback to memoize the fetch function and useMemo
-    for the context value to prevent unnecessary re-renders.
-  */
-
-  const fetchAllCoin = useCallback(async () => {
-    setIsLoading(true);
+  // ---------------------------------------------------------
+  // 1. DATA FETCHING (Replaced manual fetch with TanStack Query)
+  // ---------------------------------------------------------
+  
+  const fetchCoinData = async (curr) => {
     const apiKey = import.meta.env.VITE_CG_API_KEY;
     const options = {
       method: "GET",
@@ -29,41 +24,32 @@ const [selectedFilters, setSelectedFilters] = useState(["all"]);
       },
     };
 
-    // Add API key as query parameter if available
+    // Add API key if available
     const url = apiKey
-      ? `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.name}&x_cg_demo_api_key=${apiKey}`
-      : `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.name}`;
+      ? `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${curr.name}&x_cg_demo_api_key=${apiKey}`
+      : `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${curr.name}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
 
-    try {
-      const res = await fetch(url, options);
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
-      }
-      const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setAllCoin(data);
-      } else {
-        console.error("Invalid API response:", data);
-        setAllCoin([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch coins:", err);
-      console.log("Note: If you see a CORS error, you need to either:");
-      console.log("1. Add a CORS extension to your browser (like 'CORS Unblock')");
-      console.log("2. Set up a backend proxy server");
-      console.log("3. Get a CoinGecko API key and add it to .env file as VITE_CG_API_KEY");
-      setAllCoin([]);
-    } finally {
-      setIsLoading(false);
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
     }
-  }, [currency.name]);
+    
+    return response.json();
+  };
 
-  useEffect(() => {
-    fetchAllCoin();
-  }, [fetchAllCoin]);
+  const { data: allCoin = [], isLoading, isError, error } = useQuery({
+    queryKey: ["coins", currency.name], // Unique key for caching
+    queryFn: () => fetchCoinData(currency),
+    staleTime: 60000, // Cache data for 60 seconds
+    refetchOnWindowFocus: false,
+  });
 
-      const filteredCoins = useMemo(() => {
+  // ---------------------------------------------------------
+  // 2. FILTER LOGIC (Preserved from your original code)
+  // ---------------------------------------------------------
+
+  const filteredCoins = useMemo(() => {
     if (!Array.isArray(allCoin) || allCoin.length === 0) return [];
 
     // Only "all" selected
@@ -76,7 +62,7 @@ const [selectedFilters, setSelectedFilters] = useState(["all"]);
 
     let result = [];
 
-    // Trending
+    // Trending (Top 20 by Volume)
     if (selectedFilters.includes("trending")) {
       const trendingCoins = [...allCoin]
         .sort((a, b) => b.total_volume - a.total_volume)
@@ -84,7 +70,7 @@ const [selectedFilters, setSelectedFilters] = useState(["all"]);
       result.push(...trendingCoins);
     }
 
-    // Top Gainers
+    // Top Gainers (Top 20 by 24h Change)
     if (selectedFilters.includes("top_gainers")) {
       const topGainers = [...allCoin]
         .filter(
@@ -101,24 +87,33 @@ const [selectedFilters, setSelectedFilters] = useState(["all"]);
       result.push(...topGainers);
     }
 
-    // Remove duplicates
+    // Remove duplicates if a coin is in both lists
     return Array.from(
       new Map(result.map((coin) => [coin.id, coin])).values()
     );
   }, [allCoin, selectedFilters]);
 
+  // ---------------------------------------------------------
+  // 3. CONTEXT VALUE
+  // ---------------------------------------------------------
+
   const contextValue = useMemo(() => ({
-        filteredCoins,
-      selectedFilters,
-      setSelectedFilters,
-        allCoin,
-        currency,
-        setCurrency,
-        isLoading,
-  }), [allCoin, currency, isLoading, filteredCoins, selectedFilters]);
+    allCoin,
+    filteredCoins,
+    selectedFilters,
+    setSelectedFilters,
+    currency,
+    setCurrency,
+    isLoading,
+    isError,
+    errorMessage: error?.message,
+  }), [allCoin, filteredCoins, selectedFilters, currency, isLoading, isError, error]);
+
   return (
     <CoinContext.Provider value={contextValue}>
       {props.children}
     </CoinContext.Provider>
   );
 };
+
+export default CoinContextProvider;
