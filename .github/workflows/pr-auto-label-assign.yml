@@ -1,5 +1,4 @@
-name: PR auto label & assign
-
+name: "PR auto label & assign"
 on:
   pull_request_target:
     types: [opened, reopened, synchronize]
@@ -42,5 +41,4 @@ jobs:
               });
             } catch (err) {
               core.warning(`Assigning failed: ${err.message}`);
-            } what does this yml file does 
-
+            }
